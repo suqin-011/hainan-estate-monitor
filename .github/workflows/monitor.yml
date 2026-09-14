@@ -1,0 +1,30 @@
+name: 海南楼市监控
+
+on:
+  schedule:
+    - cron: "30 0 * * *"   # UTC 00:30 = 北京时间 08:30
+    - cron: "0 8 * * *"    # UTC 08:00 = 北京时间 16:00
+  workflow_dispatch: {}     # 允许手动在 Actions 页面点「Run workflow」
+
+permissions:
+  contents: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 安装依赖
+        run: pip install requests beautifulsoup4
+      - name: 运行监控
+        env:
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+        run: python monitor.py
+      - name: 保存快照
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update state"
+          file_pattern: state.json
